@@ -11,8 +11,8 @@ pool:
 # Define variables
 variables:
   nodeVersion: '16.x' # Specify Node.js version
-  azureSubscription: 'YourAzureSubscriptionName' # Replace with your Azure subscription name
-  webAppName: 'YourWebAppName' # Replace with your Azure Web App name
+  azureSubscription: 'f8ca0b3d-8889-4509-b3e2-211b99455807' # Replace with your Azure subscription name
+  webAppName: 'HarshalWeb' # Replace with your Azure Web App name
   buildArtifact: 'dist' # Output directory for build
 
 # Define pipeline steps
