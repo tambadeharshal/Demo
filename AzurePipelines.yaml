@@ -1,66 +1,54 @@
-# Azure Pipelines YAML for a .NET Core application
-trigger:
-  branches:
-    include:
-      - main
+# Azure DevOps CI/CD Pipeline for Node.js Application
 
+# Trigger pipeline on changes to the main branch
+trigger:
+- main
+
+# Define the agent pool
 pool:
   vmImage: 'ubuntu-latest'
 
+# Define variables
 variables:
-  buildConfiguration: 'Release'
-  azureSubscription: 'YourAzureSubscriptionName'
-  appName: 'YourWebAppName'
+  nodeVersion: '16.x' # Specify Node.js version
+  azureSubscription: 'YourAzureSubscriptionName' # Replace with your Azure subscription name
+  webAppName: 'YourWebAppName' # Replace with your Azure Web App name
+  buildArtifact: 'dist' # Output directory for build
 
+# Define pipeline steps
 steps:
-- task: UseDotNet@2
-  displayName: 'Install .NET Core SDK'
+# Install Node.js
+- task: NodeTool@0
+  displayName: 'Install Node.js'
   inputs:
-    packageType: 'sdk'
-    version: '6.x'
+    versionSpec: '$(nodeVersion)'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Restore dependencies'
-  inputs:
-    command: 'restore'
-    projects: '**/*.csproj'
-    feedsToUse: 'select'
+# Install dependencies
+- script: npm install
+  displayName: 'Install dependencies'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Build project'
-  inputs:
-    command: 'build'
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-restore'
+# Run build
+- script: npm run build
+  displayName: 'Build application'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Run tests'
-  inputs:
-    command: 'test'
-    projects: '**/*Tests/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-build --no-restore'
+# Run tests
+- script: npm test
+  displayName: 'Run unit tests'
 
-- task: DotNetCoreCLI@2
-  displayName: 'Publish project'
-  inputs:
-    command: 'publish'
-    projects: '**/*.csproj'
-    arguments: '--configuration $(buildConfiguration) --no-build --no-restore --output $(Build.ArtifactStagingDirectory)'
-    publishWebProjects: false
-    zipAfterPublish: true
-
+# Publish build artifacts
 - task: PublishBuildArtifacts@1
   displayName: 'Publish artifacts'
   inputs:
-    pathToPublish: '$(Build.ArtifactStagingDirectory)'
+    pathToPublish: '$(buildArtifact)'
     artifactName: 'drop'
     publishLocation: 'Container'
 
+# Deploy to Azure Web App
 - task: AzureWebApp@1
   displayName: 'Deploy to Azure Web App'
   inputs:
     azureSubscription: '$(azureSubscription)'
     appType: 'webApp'
-    appName: '$(appName)'
-    package: '$(Build.ArtifactStagingDirectory)/**/*.zip'
+    appName: '$(webAppName)'
+    package: '$(Build.ArtifactStagingDirectory)/drop'
     deploymentMethod: 'auto'
